@@ -46,7 +46,14 @@ public class Server {
             System.err.println("Error starting the server: " + e.getMessage());
         }
     }
-//
+//the note of handleClient:
+/*
+ * BufferedReader: is to read the request from Client
+ * PrintWriter: is to send the response to Client
+ * while: read every request line 
+ * cut the request into pieces (command, key, value).
+ * I write some error handing.
+ */
     private static void handleClient(Socket clientSocket) {
         try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
              PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
@@ -68,6 +75,11 @@ public class Server {
                     String key = parts[1];
                     String value = parts.length > 2 ? parts[2] : null;
                     String response;
+/*
+* synchronized: only one thread can enter critical section.
+* use switch to define different cases. and the actions professor required.
+* i also wrote some error handing
+*/
                     synchronized (lock) {
                         switch (command) {
                             case "PUT":
@@ -114,7 +126,11 @@ public class Server {
             }
         }
     }
-
+/*
+ * use for loop to do :
+ * output the messages of tuple space 
+ * (as required in the specification)
+ */
     private static void printTupleSpaceStatus() {
         int totalSize = 0;
         for (Map.Entry<String, String> entry : tupleSpace.entrySet()) {

@@ -29,4 +29,69 @@ public class Client {
         }
     }
 
+    private static List<String> readRequests(String file) {
+        List<String> requests = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                line = line.trim();
+                if (line.isEmpty()) continue;
+                String[] parts = line.split(" ");
+                if (parts.length < 2) {
+                    System.err.println("format is wrong '" + line + "'");
+                    continue;
+                }
+                String command = parts[0];
+                String key = parts[1];
+                String value = parts.length > 2 ? parts[2] : null;
+                int combinedSize = key.length() + (value != null ? value.length() : 0);
+                if (combinedSize > 1024) {
+                    System.err.println("size is not allow '" + line + "'");
+                    continue;
+                }
+                requests.add(command + " " + key + (value != null ? " " + value : ""));
+            }
+        } catch (IOException e) {
+            System.err.println("read error: " + e.getMessage());
+        }
+        return requests;
+    }
+
+    private static String encodeRequest(String request) {
+        String lengthStr = String.format("%03d", request.length());
+        return lengthStr + " " + request;
+    }
+
+    private static void decodeResponse(String response) {
+        if (response == null || response.length() < 3) {
+            System.err.println("format is wrong");
+            return;
+        }
+        try {
+            int length = Integer.parseInt(response.substring(0, 3));
+            String actualResponse = response.substring(4);
+            if (actualResponse.length() != length) {
+                System.err.println(" Invalid size");
+                return;
+            }
+            String[] parts = actualResponse.split(" ");
+            String status = parts[0];
+            if ("OK".equals(status)) {
+                if (parts.length > 1) {
+                    System.out.println("OK " + parts[1]);
+                } else {
+                    System.out.println("OK");
+                }
+            } else if ("ERROR".equals(status)) {
+                StringBuilder errorMsg = new StringBuilder();
+                for (int i = 1; i < parts.length; i++) {
+                    errorMsg.append(parts[i]).append(" ");
+                }
+                System.out.println("ERROR " + errorMsg.toString().trim());
+            }
+        } catch (NumberFormatException e) {
+            System.err.println("invalid format");
+        }
+    }
+}    
 
